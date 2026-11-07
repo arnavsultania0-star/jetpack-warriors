@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Jetpack Warriors — run, jump, fly and battle bots.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Jetpack Warriors</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2940;--cyan:#50d9e8;--gold:#ffc857}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#f4f7ff;font-family:system-ui,Arial;overflow:hidden;touch-action:none}
+button,select{font:inherit}button{border:1px solid #5b789b;background:#263c58;color:white;border-radius:12px;padding:11px 16px;font-weight:700}
+button:active{transform:scale(.97);background:#365777}.screen{display:none;position:absolute;inset:0;padding:20px;overflow:auto;background:radial-gradient(ellipse at top,#233b5b,#101827 70%)}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+h1{font-size:clamp(32px,8vw,58px);line-height:1;margin:0;color:var(--cyan);text-shadow:0 4px 20px #1b9eae66;text-align:center}
+h2{margin:0 0 8px;color:var(--gold)}p{max-width:650px;text-align:center;color:#c6d4e8}
+.panel{width:min(92vw,620px);padding:18px;border:1px solid #46617e;background:#17263bdc;border-radius:18px;box-shadow:0 12px 40px #0005}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.row button{min-width:125px}
+.small{font-size:13px;color:#aabbd2}.selected{outline:2px solid var(--cyan);background:#31536c}
+#game{display:none;position:absolute;inset:0;background:#0b1727}canvas{width:100%;height:100%;display:block}
+#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;font-weight:800;text-shadow:0 2px 4px #000}
+#health{width:140px;height:12px;background:#552d3b;border:1px solid #fff8;border-radius:9px;overflow:hidden;margin-top:4px}#health>i{display:block;height:100%;background:#45e08c;width:100%}
+#controls{position:absolute;inset:auto 0 12px;display:flex;justify-content:space-between;padding:0 14px;pointer-events:none}
+.pad{display:flex;gap:8px;align-items:end;pointer-events:auto}.ctrl{width:58px;height:58px;border-radius:50%;background:#c8eaff25;border:1px solid #d6f2ff80;backdrop-filter:blur(4px);font-size:20px;padding:0;touch-action:none}
+.ctrl.wide{width:68px;height:68px}.rightpad{display:grid;grid-template-columns:repeat(2,58px);gap:8px}
+#pause{position:absolute;top:52px;right:12px;pointer-events:auto;padding:7px 12px}
+#overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#07111dcc;padding:20px}
+#overlay .panel{text-align:center}
+@media(min-width:800px){#controls{opacity:.65}.ctrl{width:52px;height:52px}}
+</style>
+</head>
+<body>
+<section id="menu" class="screen active">
+<h1>JETPACK<br>WARRIORS</h1><p>Run • Jump • Fly • Battle</p>
+<div class="panel"><h2>Main Menu</h2><div class="row">
+<button onclick="show('play')">Play</button><button onclick="show('heroes')">Heroes</button><button onclick="show('maps')">Maps</button><button onclick="show('ranks')">Ranks</button><button onclick="show('how')">How to Play</button>
+</div><p class="small">Progress is saved on this device.</p></div>
+</section>
+<section id="play" class="screen"><div class="panel"><h2>Choose your match</h2><p>Battle waves of training bots. Defeat them to earn rank progress.</p><div class="row"><button onclick="startGame()">Start Battle</button><button onclick="show('menu')">Back</button></div></div></section>
+<section id="heroes" class="screen"><div class="panel"><h2>Choose a Warrior</h2><div class="row" id="heroButtons"></div><p id="heroInfo"></p><button onclick="show('menu')">Back</button></div></section>
+<section id="maps" class="screen"><div class="panel"><h2>Battle Maps</h2><div class="row" id="mapButtons"></div><p id="mapInfo"></p><button onclick="show('menu')">Back</button></div></section>
+<section id="ranks" class="screen"><div class="panel"><h2>Your Rank</h2><h1 id="rankName" style="font-size:34px"></h1><p id="rankInfo"></p><button onclick="show('menu')">Back</button></div></section>
+<section id="how" class="screen"><div class="panel"><h2>How to Play</h2><p><b>Computer:</b> A/D or ←/→ to move, W/↑/Space to jump, hold Shift to jetpack, J or click to shoot.</p><p><b>Mobile:</b> use the left buttons to move and the right buttons to jump, fly and shoot.</p><p>Defeat bots, finish each round and climb through 7 ranks with 2 divisions each.</p><button onclick="show('menu')">Back</button></div></section>
+<div id="game">
+<canvas id="c"></canvas>
+<div id="hud"><div><span id="hpText">❤️ 100</span><div id="health"><i id="hpBar"></i></div></div><div id="scoreText">Bots: 0/5</div><div id="mapText">Training Yard</div></div>
+<button id="pause" onclick="pauseGame()">Ⅱ</button>
+<div id="controls">
+<div class="pad"><button class="ctrl" data-key="left">◀</button><button class="ctrl" data-key="right">▶</button></div>
+<div class="rightpad"><button class="ctrl" data-key="jump">⬆</button><button class="ctrl" data-key="fly">✦</button><button class="ctrl wide" data-key="shoot">●</button><button class="ctrl" data-key="dash">»</button></div>
+</div>
+<div id="overlay"><div class="panel"><h2 id="overTitle">Paused</h2><p id="overText"></p><div class="row"><button onclick="resumeGame()">Continue</button><button onclick="exitGame()">Main Menu</button></div></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const heroes=[{name:"Blazer",power:"Quick dash",desc:"A fast all-rounder."},{name:"Volt",power:"Energy boost",desc:"Jetpack fuel lasts longer."},{name:"Bulwark",power:"Extra armour",desc:"Starts each match with extra health."},{name:"Nova",power:"Rapid shots",desc:"Fires faster."}];
+const maps=[{name:"Training Yard",unlock:0,sky:"#173b5a",ground:"#365d4a"},{name:"Neon City",unlock:1,sky:"#27204e",ground:"#41405d"},{name:"Dust Canyon",unlock:2,sky:"#70452e",ground:"#9b663d"},{name:"Frost Base",unlock:3,sky:"#42677e",ground:"#d2e5e9"},{name:"Sky Ruins",unlock:4,sky:"#334d68",ground:"#657b75"}];
+const ranks=["Rookie","Scout","Ranger","Vanguard","Elite","Champion","Legend"];
+let save=JSON.parse(localStorage.getItem("jw-save")||'{"wins":0,"hero":0,"map":0,"division":0}');
+function persist(){localStorage.setItem("jw-save",JSON.stringify(save))}
+function rankIndex(){return Math.min(6,Math.floor(save.wins/2))}
+function rankText(){return ranks[rankIndex()]+" "+(save.wins%2===0?"I":"II")}
+function show(id){$("game").style.display="none";document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");if(id==="heroes")renderHeroes();if(id==="maps")renderMaps();if(id==="ranks"){$("rankName").textContent=rankText();$("rankInfo").textContent=save.wins+" wins. Win "+(2-save.wins%2)+" more match(es) to advance."}}
+function renderHeroes(){$("heroButtons").innerHTML="";heroes.forEach((h,i)=>{let b=document.createElement("button");b.textContent=h.name+(save.hero===i?" ✓":"");b.className=save.hero===i?"selected":"";b.onclick=()=>{save.hero=i;persist();renderHeroes()};$("heroButtons").append(b)});let h=heroes[save.hero];$("heroInfo").textContent=h.power+" — "+h.desc}
+function renderMaps(){$("mapButtons").innerHTML="";maps.forEach((m,i)=>{let b=document.createElement("button");let open=save.wins>=m.unlock;b.textContent=m.name+(open?"":" 🔒");b.disabled=!open;b.className=save.map===i?"selected":"";b.onclick=()=>{save.map=i;persist();renderMaps()};$("mapButtons").append(b)});$("mapInfo").textContent="Win matches to unlock more battle maps."}
+let canvas=$("c"),ctx=canvas.getContext("2d"),W=900,H=500,player,bots=[],shots=[],keys={},running=false,raf=0,score=0,health=100,cam=0,frame=0;
+function resize(){let d=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;ctx.setTransform(canvas.width/900,0,0,canvas.height/500,0,0)}addEventListener("resize",resize);
+function startGame(){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$("game").style.display="block";resize();health=heroes[save.hero].name==="Bulwark"?130:100;score=0;cam=0;frame=0;player={x:90,y:350,vx:0,vy:0,fuel:100,face:1,fire:0};bots=[];shots=[];for(let i=0;i<5;i++)bots.push({x:500+i*230,y:350,hp:50,fire:80+i*35});$("overlay").style.display="none";running=true;loop()}
+function keySet(k,v){keys[k]=v}
+document.addEventListener("keydown",e=>{let k=e.key.toLowerCase();if(["arrowleft","arrowright","arrowup"," "].includes(k))e.preventDefault();keySet(k,true)});document.addEventListener("keyup",e=>keySet(e.key.toLowerCase(),false));
+document.querySelectorAll(".ctrl").forEach(b=>{let k=b.dataset.key;let down=e=>{e.preventDefault();keySet(k,true)},up=e=>{e.preventDefault();keySet(k,false)};b.addEventListener("pointerdown",down);b.addEventListener("pointerup",up);b.addEventListener("pointercancel",up);b.addEventListener("pointerleave",up)});
+function pressed(...k){return k.some(x=>keys[x])}
+function shoot(){if(player.fire>0)return;shots.push({x:player.x+player.face*22,y:player.y-12,vx:player.face*9,owner:"p"});player.fire=heroes[save.hero].name==="Nova"?9:17}
+function loop(){if(!running)return;update();draw();raf=requestAnimationFrame(loop)}
+function update(){frame++;let left=pressed("a","arrowleft","left"),right=pressed("d","arrowright","right");player.vx=left?-3.5:right?3.5:0;if(left)player.face=-1;if(right)player.face=1;
+if(pressed("w","arrowup"," ","jump")&&player.y>=349)player.vy=-10;
+if(pressed("shift","fly")&&player.fuel>0){player.vy-=.45;player.fuel-=.7}else player.fuel=Math.min(100,player.fuel+.25);
+if(pressed("j","shoot"))shoot();if(player.fire>0)player.fire--;player.vy+=.42;player.x+=player.vx;player.y+=player.vy;if(player.y>350){player.y=350;player.vy=0}player.x=Math.max(20,Math.min(2400,player.x));cam=Math.max(0,Math.min(1600,player.x-260));
+bots.forEach(b=>{if(b.hp<=0)return;let dir=Math.sign(player.x-b.x);b.x+=dir*.75;if(Math.abs(player.x-b.x)<430&&--b.fire<=0){shots.push({x:b.x,y:b.y-12,vx:dir*5,owner:"b"});b.fire=100+Math.random()*70}});
+shots.forEach(s=>{s.x+=s.vx;if(s.owner==="p"){bots.forEach(b=>{if(b.hp>0&&Math.abs(s.x-b.x)<20&&Math.abs(s.y-(b.y-12))<25){b.hp-=25;s.x=-999;if(b.hp<=0)score++}})}else if(Math.abs(s.x-player.x)<18&&Math.abs(s.y-(player.y-12))<24){health-=8;s.x=-999}});
+shots=shots.filter(s=>s.x>-cam-100&&s.x<cam+1000);if(health<=0){endGame(false);return}if(score>=5){endGame(true);return}
+$("hpText").textContent="❤️ "+Math.max(0,health);$("hpBar").style.width=Math.max(0,health/(heroes[save.hero].name==="Bulwark"?130:100)*100)+"%";$("scoreText").textContent="Bots: "+score+"/5";$("mapText").textContent=maps[save.map].name}
+function draw(){let m=maps[save.map];ctx.fillStyle=m.sky;ctx.fillRect(0,0,900,500);for(let i=0;i<9;i++){let x=((i*170-cam*.35)%1100+1100)%1100;ctx.fillStyle="#ffffff12";ctx.fillRect(x,90,65,210)}ctx.fillStyle=m.ground;ctx.fillRect(0,390,900,110);ctx.fillStyle="#ffffff30";for(let x=0;x<900;x+=50)ctx.fillRect(x,390,25,5);
+bots.forEach(b=>{if(b.hp<=0)return;let x=b.x-cam;ctx.fillStyle="#e56b70";ctx.fillRect(x-13,b.y-34,26,34);ctx.fillStyle="#fff";ctx.fillRect(x-8,b.y-26,5,5);ctx.fillRect(x+3,b.y-26,5,5);ctx.fillStyle="#552b37";ctx.fillRect(x-18,b.y-46,36,5);ctx.fillStyle="#ff596b";ctx.fillRect(x-18,b.y-46,36*b.hp/50,5)});
+shots.forEach(s=>{ctx.fillStyle=s.owner==="p"?"#ffe16b":"#ff7880";ctx.beginPath();ctx.arc(s.x-cam,s.y,5,0,Math.PI*2);ctx.fill()});
+let x=player.x-cam;ctx.fillStyle=heroes[save.hero].name==="Volt"?"#64e9ff":heroes[save.hero].name==="Nova"?"#c69aff":heroes[save.hero].name==="Bulwark"?"#a9d58b":"#f7c45b";ctx.fillRect(x-13,player.y-36,26,36);ctx.fillStyle="#172338";ctx.fillRect(x+player.face*5,player.y-27,5,5);if(pressed("shift","fly")){ctx.fillStyle="#ffb84d";ctx.beginPath();ctx.moveTo(x-7,player.y);ctx.lineTo(x,player.y+17+Math.random()*8);ctx.lineTo(x+7,player.y);ctx.fill()}ctx.fillStyle="#dce9ff";ctx.font="12px system-ui";ctx.fillText(heroes[save.hero].name,x-25,player.y-44)}
+function endGame(win){running=false;if(win){save.wins++;persist()}$("overlay").style.display="flex";$("overTitle").textContent=win?"Victory!":"Match Over";$("overText").textContent=win?"You defeated all bots. Rank: "+rankText()+".":"Your warrior ran out of health. Try again!"}
+function pauseGame(){if(!running)return;running=false;$("overTitle").textContent="Paused";$("overText").textContent="Take a break, warrior."; $("overlay").style.display="flex"}
+function resumeGame(){if($("overTitle").textContent==="Victory!"||$("overTitle").textContent==="Match Over")return; $("overlay").style.display="none";running=true;loop()}
+function exitGame(){running=false;cancelAnimationFrame(raf);$("overlay").style.display="none";show("menu")}
+renderHeroes();renderMaps();
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body></html>
