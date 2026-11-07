@@ -1,96 +1,133 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#101827">
-<meta name="description" content="Jetpack Warriors — run, jump, fly and battle bots.">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Jetpack Warriors</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101c2b"><link rel="manifest" href="manifest.webmanifest"><title>Jetpack Warriors: Arena</title>
 <style>
-:root{color-scheme:dark;--bg:#101827;--panel:#1b2940;--cyan:#50d9e8;--gold:#ffc857}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#f4f7ff;font-family:system-ui,Arial;overflow:hidden;touch-action:none}
-button,select{font:inherit}button{border:1px solid #5b789b;background:#263c58;color:white;border-radius:12px;padding:11px 16px;font-weight:700}
-button:active{transform:scale(.97);background:#365777}.screen{display:none;position:absolute;inset:0;padding:20px;overflow:auto;background:radial-gradient(ellipse at top,#233b5b,#101827 70%)}
-.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-h1{font-size:clamp(32px,8vw,58px);line-height:1;margin:0;color:var(--cyan);text-shadow:0 4px 20px #1b9eae66;text-align:center}
-h2{margin:0 0 8px;color:var(--gold)}p{max-width:650px;text-align:center;color:#c6d4e8}
-.panel{width:min(92vw,620px);padding:18px;border:1px solid #46617e;background:#17263bdc;border-radius:18px;box-shadow:0 12px 40px #0005}
-.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.row button{min-width:125px}
-.small{font-size:13px;color:#aabbd2}.selected{outline:2px solid var(--cyan);background:#31536c}
-#game{display:none;position:absolute;inset:0;background:#0b1727}canvas{width:100%;height:100%;display:block}
-#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;font-weight:800;text-shadow:0 2px 4px #000}
-#health{width:140px;height:12px;background:#552d3b;border:1px solid #fff8;border-radius:9px;overflow:hidden;margin-top:4px}#health>i{display:block;height:100%;background:#45e08c;width:100%}
-#controls{position:absolute;inset:auto 0 12px;display:flex;justify-content:space-between;padding:0 14px;pointer-events:none}
-.pad{display:flex;gap:8px;align-items:end;pointer-events:auto}.ctrl{width:58px;height:58px;border-radius:50%;background:#c8eaff25;border:1px solid #d6f2ff80;backdrop-filter:blur(4px);font-size:20px;padding:0;touch-action:none}
-.ctrl.wide{width:68px;height:68px}.rightpad{display:grid;grid-template-columns:repeat(2,58px);gap:8px}
-#pause{position:absolute;top:52px;right:12px;pointer-events:auto;padding:7px 12px}
-#overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#07111dcc;padding:20px}
-#overlay .panel{text-align:center}
-@media(min-width:800px){#controls{opacity:.65}.ctrl{width:52px;height:52px}}
-</style>
-</head>
+:root{--gold:#ffd36b;--panel:#14263bea;--line:#82a7bb}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101c2b;color:#f5f7fa;font-family:system-ui,Segoe UI,Arial;touch-action:none}
+canvas{display:block;width:100vw;height:100vh;touch-action:none}
+#menu{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:14px;background:radial-gradient(ellipse at 50% 15%,#436c82aa,#0c1524f2 70%),linear-gradient(135deg,#142c3b,#111827)}
+.panel{width:min(760px,98vw);max-height:96vh;overflow:auto;padding:clamp(15px,3vw,26px);border:2px solid #6f9ab2;border-radius:22px;background:linear-gradient(145deg,#1b3548f5,#101d30f7);box-shadow:0 20px 60px #0009}
+.brand{font-size:clamp(30px,7vw,54px);line-height:1;font-weight:1000;letter-spacing:1px;color:var(--gold);text-shadow:3px 4px #8a4a32,0 0 24px #ffcb5b55}
+.tag{color:#c2d7e3;margin:8px 0 16px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{background:#29445a;border:1px solid #53758b;border-radius:12px;padding:10px;font-size:12px;color:#d9eaf4}
+select{display:block;width:100%;margin-top:5px;padding:9px;border:0;border-radius:8px;background:#e5edf1;color:#162737;font-weight:800;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.stat{background:#0e1c2c;border:1px solid #385b72;border-radius:10px;padding:9px;text-align:center;font-size:12px;color:#c8dce8}.stat b{display:block;color:#ffe08b;font-size:18px}
+.actions{display:flex;gap:10px;margin-top:12px}button{border:0;border-radius:11px;padding:12px 14px;font-weight:900;font-size:14px;background:linear-gradient(#ffe28a,#e9ad43);color:#1b2934;cursor:pointer;touch-action:manipulation}button.secondary{background:#385d77;color:#fff;border:1px solid #789ab0}button:active{transform:scale(.97)}
+#details{margin-top:12px;background:#0c1a29;border:1px solid #35546b;border-radius:12px;padding:12px;color:#d3e2eb;font-size:13px;line-height:1.5;display:none}
+#hud{position:fixed;top:8px;left:8px;right:8px;display:none;justify-content:space-between;gap:6px;pointer-events:none;z-index:3;font-weight:900;text-shadow:1px 2px #07111b}
+#hud span{background:#102338dd;border:1px solid #8ba9bb;border-radius:9px;padding:7px 10px;font-size:12px}
+#controls{display:none;position:fixed;inset:0;z-index:4;pointer-events:none}
+.pad{position:absolute;bottom:18px;width:126px;height:126px;border-radius:50%;background:#d9efff20;border:2px solid #ffffff55;pointer-events:auto;touch-action:none}
+.pad .nub{position:absolute;left:36px;top:36px;width:50px;height:50px;border-radius:50%;background:#eaf7ff75;border:1px solid #fff9;pointer-events:none}
+#leftPad{left:15px}#rightPad{right:15px}
+#rightPad .nub{background:#ffd36b77}
+.extra{position:absolute;left:50%;bottom:25px;transform:translateX(-50%);display:flex;gap:9px;pointer-events:auto}
+.extra button{width:64px;height:54px;padding:4px;border-radius:15px;background:#d9efff55;color:white;border:1px solid #fff9;font-size:11px}
+.extra .jet{background:#d99b3caa}.extra .reload{background:#477c9aaa}
+#hint{position:fixed;bottom:3px;left:50%;transform:translateX(-50%);font-size:10px;color:#fff9;text-shadow:1px 1px #000;white-space:nowrap;pointer-events:none}
+#toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);background:#102338eF;border:1px solid #ffe08b;border-radius:10px;padding:9px 14px;z-index:8;display:none;font-weight:800}
+@media(max-width:560px){.grid{gap:7px}.field{padding:8px}.actions button{flex:1}.extra{left:50%;bottom:18px}.pad{width:112px;height:112px}.pad .nub{left:31px;top:31px;width:46px;height:46px}#hint{bottom:2px;font-size:9px}}
+</style></head>
 <body>
-<section id="menu" class="screen active">
-<h1>JETPACK<br>WARRIORS</h1><p>Run • Jump • Fly • Battle</p>
-<div class="panel"><h2>Main Menu</h2><div class="row">
-<button onclick="show('play')">Play</button><button onclick="show('heroes')">Heroes</button><button onclick="show('maps')">Maps</button><button onclick="show('ranks')">Ranks</button><button onclick="show('how')">How to Play</button>
-</div><p class="small">Progress is saved on this device.</p></div>
-</section>
-<section id="play" class="screen"><div class="panel"><h2>Choose your match</h2><p>Battle waves of training bots. Defeat them to earn rank progress.</p><div class="row"><button onclick="startGame()">Start Battle</button><button onclick="show('menu')">Back</button></div></div></section>
-<section id="heroes" class="screen"><div class="panel"><h2>Choose a Warrior</h2><div class="row" id="heroButtons"></div><p id="heroInfo"></p><button onclick="show('menu')">Back</button></div></section>
-<section id="maps" class="screen"><div class="panel"><h2>Battle Maps</h2><div class="row" id="mapButtons"></div><p id="mapInfo"></p><button onclick="show('menu')">Back</button></div></section>
-<section id="ranks" class="screen"><div class="panel"><h2>Your Rank</h2><h1 id="rankName" style="font-size:34px"></h1><p id="rankInfo"></p><button onclick="show('menu')">Back</button></div></section>
-<section id="how" class="screen"><div class="panel"><h2>How to Play</h2><p><b>Computer:</b> A/D or ←/→ to move, W/↑/Space to jump, hold Shift to jetpack, J or click to shoot.</p><p><b>Mobile:</b> use the left buttons to move and the right buttons to jump, fly and shoot.</p><p>Defeat bots, finish each round and climb through 7 ranks with 2 divisions each.</p><button onclick="show('menu')">Back</button></div></section>
-<div id="game">
-<canvas id="c"></canvas>
-<div id="hud"><div><span id="hpText">❤️ 100</span><div id="health"><i id="hpBar"></i></div></div><div id="scoreText">Bots: 0/5</div><div id="mapText">Training Yard</div></div>
-<button id="pause" onclick="pauseGame()">Ⅱ</button>
+<canvas id="game"></canvas>
+<div id="menu"><div class="panel">
+<div class="brand">JETPACK WARRIORS</div><div class="tag">ARENA EDITION · Jetpack combat · Squad up against smart bots</div>
+<div class="stats"><div class="stat">CURRENT RANK<b id="rank">ROOKIE I</b></div><div class="stat">BATTLE WINS<b id="wins">0</b></div><div class="stat">TOTAL KOs<b id="total">0</b></div></div>
+<div class="grid">
+<label class="field">YOUR WARRIOR<select id="character"><option value="scout">SCOUT · Quick dash</option><option value="tank">TANK · Heavy armour</option><option value="ace">ACE · Jet specialist</option><option value="medic">MEDIC · Regeneration</option><option value="shadow">SHADOW · Unlock at 8 wins</option></select></label>
+<label class="field">BATTLE MAP<select id="map"><option value="training">TRAINING YARD</option><option value="sky">SKY DOCKS</option><option value="canyon">RED CANYON</option><option value="factory">IRON FACTORY</option></select></label>
+<label class="field">BOT SKILL<select id="difficulty"><option value="easy">RECRUIT</option><option value="normal">VETERAN</option><option value="hard">ELITE</option></select></label>
+<label class="field">GAME MODE<select id="mode"><option value="survival">SURVIVAL · Waves</option><option value="duel">DUEL · 1 vs 1</option><option value="squad">SQUAD · 1 vs 3</option></select></label>
+</div>
+<div class="actions"><button id="start">▶ START BATTLE</button><button class="secondary" id="quests">QUESTS & RANKS</button><button class="secondary" id="help">CONTROLS</button></div>
+<div id="details"></div>
+<div style="margin-top:12px;color:#9fb9c9;font-size:11px">Progress saves on this device. Win battles to climb 7 ranks with 2 divisions each. Complete quest milestones to unlock warriors.</div>
+</div></div>
+<div id="hud"><span id="hp">♥ 100</span><span id="wave">WAVE 1</span><span id="ko">KOs 0</span><span id="ammo">AMMO ∞</span><span id="pause">Ⅱ MENU</span></div>
 <div id="controls">
-<div class="pad"><button class="ctrl" data-key="left">◀</button><button class="ctrl" data-key="right">▶</button></div>
-<div class="rightpad"><button class="ctrl" data-key="jump">⬆</button><button class="ctrl" data-key="fly">✦</button><button class="ctrl wide" data-key="shoot">●</button><button class="ctrl" data-key="dash">»</button></div>
+ <div id="leftPad" class="pad"><div class="nub"></div></div>
+ <div id="rightPad" class="pad"><div class="nub"></div></div>
+ <div class="extra"><button id="jump">JUMP</button><button id="jet" class="jet">JETPACK</button><button id="reload" class="reload">DASH</button></div>
 </div>
-<div id="overlay"><div class="panel"><h2 id="overTitle">Paused</h2><p id="overText"></p><div class="row"><button onclick="resumeGame()">Continue</button><button onclick="exitGame()">Main Menu</button></div></div></div>
-</div>
+<div id="hint">LEFT THUMB: MOVE · RIGHT THUMB: AIM + FIRE · JUMP · JETPACK · DASH</div><div id="toast"></div>
 <script>
-const $=id=>document.getElementById(id);
-const heroes=[{name:"Blazer",power:"Quick dash",desc:"A fast all-rounder."},{name:"Volt",power:"Energy boost",desc:"Jetpack fuel lasts longer."},{name:"Bulwark",power:"Extra armour",desc:"Starts each match with extra health."},{name:"Nova",power:"Rapid shots",desc:"Fires faster."}];
-const maps=[{name:"Training Yard",unlock:0,sky:"#173b5a",ground:"#365d4a"},{name:"Neon City",unlock:1,sky:"#27204e",ground:"#41405d"},{name:"Dust Canyon",unlock:2,sky:"#70452e",ground:"#9b663d"},{name:"Frost Base",unlock:3,sky:"#42677e",ground:"#d2e5e9"},{name:"Sky Ruins",unlock:4,sky:"#334d68",ground:"#657b75"}];
-const ranks=["Rookie","Scout","Ranger","Vanguard","Elite","Champion","Legend"];
-let save=JSON.parse(localStorage.getItem("jw-save")||'{"wins":0,"hero":0,"map":0,"division":0}');
-function persist(){localStorage.setItem("jw-save",JSON.stringify(save))}
-function rankIndex(){return Math.min(6,Math.floor(save.wins/2))}
-function rankText(){return ranks[rankIndex()]+" "+(save.wins%2===0?"I":"II")}
-function show(id){$("game").style.display="none";document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");if(id==="heroes")renderHeroes();if(id==="maps")renderMaps();if(id==="ranks"){$("rankName").textContent=rankText();$("rankInfo").textContent=save.wins+" wins. Win "+(2-save.wins%2)+" more match(es) to advance."}}
-function renderHeroes(){$("heroButtons").innerHTML="";heroes.forEach((h,i)=>{let b=document.createElement("button");b.textContent=h.name+(save.hero===i?" ✓":"");b.className=save.hero===i?"selected":"";b.onclick=()=>{save.hero=i;persist();renderHeroes()};$("heroButtons").append(b)});let h=heroes[save.hero];$("heroInfo").textContent=h.power+" — "+h.desc}
-function renderMaps(){$("mapButtons").innerHTML="";maps.forEach((m,i)=>{let b=document.createElement("button");let open=save.wins>=m.unlock;b.textContent=m.name+(open?"":" 🔒");b.disabled=!open;b.className=save.map===i?"selected":"";b.onclick=()=>{save.map=i;persist();renderMaps()};$("mapButtons").append(b)});$("mapInfo").textContent="Win matches to unlock more battle maps."}
-let canvas=$("c"),ctx=canvas.getContext("2d"),W=900,H=500,player,bots=[],shots=[],keys={},running=false,raf=0,score=0,health=100,cam=0,frame=0;
-function resize(){let d=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;ctx.setTransform(canvas.width/900,0,0,canvas.height/500,0,0)}addEventListener("resize",resize);
-function startGame(){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));$("game").style.display="block";resize();health=heroes[save.hero].name==="Bulwark"?130:100;score=0;cam=0;frame=0;player={x:90,y:350,vx:0,vy:0,fuel:100,face:1,fire:0};bots=[];shots=[];for(let i=0;i<5;i++)bots.push({x:500+i*230,y:350,hp:50,fire:80+i*35});$("overlay").style.display="none";running=true;loop()}
-function keySet(k,v){keys[k]=v}
-document.addEventListener("keydown",e=>{let k=e.key.toLowerCase();if(["arrowleft","arrowright","arrowup"," "].includes(k))e.preventDefault();keySet(k,true)});document.addEventListener("keyup",e=>keySet(e.key.toLowerCase(),false));
-document.querySelectorAll(".ctrl").forEach(b=>{let k=b.dataset.key;let down=e=>{e.preventDefault();keySet(k,true)},up=e=>{e.preventDefault();keySet(k,false)};b.addEventListener("pointerdown",down);b.addEventListener("pointerup",up);b.addEventListener("pointercancel",up);b.addEventListener("pointerleave",up)});
-function pressed(...k){return k.some(x=>keys[x])}
-function shoot(){if(player.fire>0)return;shots.push({x:player.x+player.face*22,y:player.y-12,vx:player.face*9,owner:"p"});player.fire=heroes[save.hero].name==="Nova"?9:17}
-function loop(){if(!running)return;update();draw();raf=requestAnimationFrame(loop)}
-function update(){frame++;let left=pressed("a","arrowleft","left"),right=pressed("d","arrowright","right");player.vx=left?-3.5:right?3.5:0;if(left)player.face=-1;if(right)player.face=1;
-if(pressed("w","arrowup"," ","jump")&&player.y>=349)player.vy=-10;
-if(pressed("shift","fly")&&player.fuel>0){player.vy-=.45;player.fuel-=.7}else player.fuel=Math.min(100,player.fuel+.25);
-if(pressed("j","shoot"))shoot();if(player.fire>0)player.fire--;player.vy+=.42;player.x+=player.vx;player.y+=player.vy;if(player.y>350){player.y=350;player.vy=0}player.x=Math.max(20,Math.min(2400,player.x));cam=Math.max(0,Math.min(1600,player.x-260));
-bots.forEach(b=>{if(b.hp<=0)return;let dir=Math.sign(player.x-b.x);b.x+=dir*.75;if(Math.abs(player.x-b.x)<430&&--b.fire<=0){shots.push({x:b.x,y:b.y-12,vx:dir*5,owner:"b"});b.fire=100+Math.random()*70}});
-shots.forEach(s=>{s.x+=s.vx;if(s.owner==="p"){bots.forEach(b=>{if(b.hp>0&&Math.abs(s.x-b.x)<20&&Math.abs(s.y-(b.y-12))<25){b.hp-=25;s.x=-999;if(b.hp<=0)score++}})}else if(Math.abs(s.x-player.x)<18&&Math.abs(s.y-(player.y-12))<24){health-=8;s.x=-999}});
-shots=shots.filter(s=>s.x>-cam-100&&s.x<cam+1000);if(health<=0){endGame(false);return}if(score>=5){endGame(true);return}
-$("hpText").textContent="❤️ "+Math.max(0,health);$("hpBar").style.width=Math.max(0,health/(heroes[save.hero].name==="Bulwark"?130:100)*100)+"%";$("scoreText").textContent="Bots: "+score+"/5";$("mapText").textContent=maps[save.map].name}
-function draw(){let m=maps[save.map];ctx.fillStyle=m.sky;ctx.fillRect(0,0,900,500);for(let i=0;i<9;i++){let x=((i*170-cam*.35)%1100+1100)%1100;ctx.fillStyle="#ffffff12";ctx.fillRect(x,90,65,210)}ctx.fillStyle=m.ground;ctx.fillRect(0,390,900,110);ctx.fillStyle="#ffffff30";for(let x=0;x<900;x+=50)ctx.fillRect(x,390,25,5);
-bots.forEach(b=>{if(b.hp<=0)return;let x=b.x-cam;ctx.fillStyle="#e56b70";ctx.fillRect(x-13,b.y-34,26,34);ctx.fillStyle="#fff";ctx.fillRect(x-8,b.y-26,5,5);ctx.fillRect(x+3,b.y-26,5,5);ctx.fillStyle="#552b37";ctx.fillRect(x-18,b.y-46,36,5);ctx.fillStyle="#ff596b";ctx.fillRect(x-18,b.y-46,36*b.hp/50,5)});
-shots.forEach(s=>{ctx.fillStyle=s.owner==="p"?"#ffe16b":"#ff7880";ctx.beginPath();ctx.arc(s.x-cam,s.y,5,0,Math.PI*2);ctx.fill()});
-let x=player.x-cam;ctx.fillStyle=heroes[save.hero].name==="Volt"?"#64e9ff":heroes[save.hero].name==="Nova"?"#c69aff":heroes[save.hero].name==="Bulwark"?"#a9d58b":"#f7c45b";ctx.fillRect(x-13,player.y-36,26,36);ctx.fillStyle="#172338";ctx.fillRect(x+player.face*5,player.y-27,5,5);if(pressed("shift","fly")){ctx.fillStyle="#ffb84d";ctx.beginPath();ctx.moveTo(x-7,player.y);ctx.lineTo(x,player.y+17+Math.random()*8);ctx.lineTo(x+7,player.y);ctx.fill()}ctx.fillStyle="#dce9ff";ctx.font="12px system-ui";ctx.fillText(heroes[save.hero].name,x-25,player.y-44)}
-function endGame(win){running=false;if(win){save.wins++;persist()}$("overlay").style.display="flex";$("overTitle").textContent=win?"Victory!":"Match Over";$("overText").textContent=win?"You defeated all bots. Rank: "+rankText()+".":"Your warrior ran out of health. Try again!"}
-function pauseGame(){if(!running)return;running=false;$("overTitle").textContent="Paused";$("overText").textContent="Take a break, warrior."; $("overlay").style.display="flex"}
-function resumeGame(){if($("overTitle").textContent==="Victory!"||$("overTitle").textContent==="Match Over")return; $("overlay").style.display="none";running=true;loop()}
-function exitGame(){running=false;cancelAnimationFrame(raf);$("overlay").style.display="none";show("menu")}
-renderHeroes();renderMaps();
-if("serviceWorker" in navigator && location.protocol.startsWith("http"))window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-</script>
-</body></html>
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');let W=innerWidth,H=innerHeight,dpr=1;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id),store={wins:+localStorage.jw2wins||0,kos:+localStorage.jw2kos||0,unlocked:JSON.parse(localStorage.jw2unlock||'["scout","tank","ace","medic"]')};
+const rankNames=['ROOKIE','CADET','RANGER','COMMANDO','ELITE','VETERAN','LEGEND'];let rankIndex=Math.min(6,Math.floor(store.wins/2)),division=store.wins%2;
+function updateMenuStats(){$('rank').textContent=rankNames[rankIndex]+' '+(division?'II':'I');$('wins').textContent=store.wins;$('total').textContent=store.kos;let s=$('character');for(let o of s.options){if(o.value==='shadow')o.disabled=store.wins<8;}}
+updateMenuStats();
+let active=false,paused=false,player=null,bots=[],bullets=[],particles=[],pickups=[],platforms=[],cam=0,worldW=2200,ground=0,wave=1,roundKOs=0,gameMode='survival',skill='easy',map='training',character='scout',last=0,keys={},mouse={x:W*.7,y:H*.5,down:false},joy={move:0,aimX:1,aimY:0,aiming:false,jump:false,jet:false,dash:false},shootTimer=0,toastTimer=0;
+const colors={training:['#80c4d8','#d4e7c9','#527c78'],sky:['#a3d1e2','#e9e0c8','#638ca0'],canyon:['#e5a17b','#f0d3a0','#a85d48'],factory:['#70899a','#c2c9bd','#53616a']};
+function makeMap(){ground=H-76;let sets={training:[[260,ground-125,230],[650,ground-215,230],[1080,ground-145,260],[1540,ground-230,240]],sky:[[160,ground-185,270],[560,ground-100,230],[950,ground-245,270],[1450,ground-145,300],[1900,ground-230,180]],canyon:[[240,ground-110,300],[690,ground-260,210],[1080,ground-155,300],[1600,ground-270,250]],factory:[[220,ground-180,250],[600,ground-100,260],[1000,ground-230,250],[1450,ground-120,300],[1850,ground-220,200]]};platforms=sets[map].map(a=>({x:a[0],y:a[1],w:a[2]}));}
+function showToast(s){$('toast').textContent=s;$('toast').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.display='none',1500)}
+function startGame(){character=$('character').value;map=$('map').value;skill=$('difficulty').value;gameMode=$('mode').value;if(character==='shadow'&&!store.unlocked.includes('shadow'))return;
+makeMap();let max=character==='tank'?150:100;player={x:120,y:ground-70,vx:0,vy:0,hp:max,max,face:1,jet:100,dash:0,fireCd:0,inv:0,regen:0,weapon:'pulse'};
+bots=[];bullets=[];particles=[];pickups=[];cam=0;wave=1;roundKOs=0;spawnWave();active=true;paused=false;$('menu').style.display='none';$('hud').style.display='flex';$('controls').style.display='block';$('pause').textContent='Ⅱ MENU';last=performance.now();requestAnimationFrame(loop);}
+function spawnWave(){let n=gameMode==='duel'?1:gameMode==='squad'?3:Math.min(2+wave,6);for(let i=0;i<n;i++){let hard=skill==='hard';bots.push({x:650+i*250+(wave-1)*20,y:ground-70,vx:0,vy:0,hp:hard?145:skill==='normal'?115:90,max:hard?145:skill==='normal'?115:90,face:-1,cd:.5+Math.random(),inv:0,jet:40,kind:i%3,think:0});}}
+function finish(win){active=false;$('hud').style.display='none';$('controls').style.display='none';$('menu').style.display='flex';if(win){store.wins++;store.kos+=roundKOs;localStorage.jw2wins=store.wins;localStorage.jw2kos=store.kos;if(store.wins>=8&&!store.unlocked.includes('shadow')){store.unlocked.push('shadow');localStorage.jw2unlock=JSON.stringify(store.unlocked);showToast('SHADOW WARRIOR UNLOCKED!')}rankIndex=Math.min(6,Math.floor(store.wins/2));division=store.wins%2;updateMenuStats();$('details').style.display='block';$('details').innerHTML=`<b style="color:#ffdf84">VICTORY!</b><br>Battle wins: ${store.wins} · KOs this battle: ${roundKOs}<br>Rank: ${rankNames[rankIndex]} ${division?'II':'I'}<br>${store.wins>=8?'Shadow warrior quest completed!':'Win '+(8-store.wins)+' more battle(s) to unlock Shadow.'}`;}else{$('details').style.display='block';$('details').innerHTML='<b style="color:#ff9d86">BATTLE OVER</b><br>You were defeated. Change your strategy and try again.';}}
+function pauseMenu(){if(!active)return;finish(false)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function fire(owner,tx,ty){let dx=tx-owner.x,dy=ty-(owner.y-28),d=Math.hypot(dx,dy)||1;let speed=owner===player?760:skill==='hard'?530:420;bullets.push({x:owner.x+owner.face*23,y:owner.y-29,vx:dx/d*speed,vy:dy/d*speed,owner,life:1.7,damage:owner===player?34:(skill==='hard'?15:10)});}
+function fx(x,y,col,n=7){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*260,vy:(Math.random()-.5)*230,life:.35+Math.random()*.25,col,size:2+Math.random()*3});}
+function collideFloor(o,dt){let old=o.y;o.vy+=1050*dt;o.y+=o.vy*dt;if(o.y>ground-33){o.y=ground-33;o.vy=0;o.jet=Math.min(100,(o.jet||0)+12*dt)}for(let p of platforms){if(o.vy>=0&&o.x>p.x-20&&o.x<p.x+p.w+20&&old+25<=p.y+8&&o.y+25>=p.y){o.y=p.y-25;o.vy=0;}}}
+function update(dt){if(paused)return;
+let move=clamp((keys.a||keys.ArrowLeft?-1:0)+(keys.d||keys.ArrowRight?1:0)+joy.move,-1,1);
+player.vx=move*290;if(move)player.face=Math.sign(move);
+if((keys.w||keys.ArrowUp||keys[' ']||joy.jump)&&player.y>=ground-68){player.vy=-465;joy.jump=false;}
+let jet=keys.Shift||joy.jet;if(jet&&player.jet>0){player.vy-=760*dt;player.jet=Math.max(0,player.jet-(character==='ace'?22:34)*dt);fx(player.x,player.y+10,'#ffb94e',2)}
+if(character==='medic'&&player.hp<player.max){player.regen+=dt;if(player.regen>3){player.hp=Math.min(player.max,player.hp+2);player.regen=0}}
+if((keys.Control||joy.dash)&&player.dash<=0){player.x+=player.face*115;player.dash=2.8;player.inv=.18;fx(player.x,player.y,'#9ee6ff',10);joy.dash=false}
+player.dash-=dt;player.inv-=dt;player.fireCd-=dt;collideFloor(player,dt);player.x=clamp(player.x+player.vx*dt,25,worldW-25);
+let aimX=joy.aiming?player.x+joy.aimX*500:mouse.x+cam,aimY=joy.aiming?player.y+joy.aimY*500:mouse.y;
+if(joy.aiming||mouse.down||keys.f){if(player.fireCd<=0){fire(player,aimX,aimY);player.fireCd=.16}}
+for(let b of bots){b.cd-=dt;b.inv-=dt;let dx=player.x-b.x,dy=player.y-b.y;b.face=Math.sign(dx)||b.face;let dist=Math.abs(dx);b.vx=dist>180?Math.sign(dx)*(skill==='hard'?185:skill==='normal'?145:110):Math.sin(performance.now()/500+b.x)*65;if(dist<650&&b.cd<=0){fire(b,player.x,player.y-20);b.cd=skill==='hard'?.62:skill==='normal'?.9:1.2;}if(skill==='hard'&&Math.random()<.012)b.vy=-280;collideFloor(b,dt);b.x=clamp(b.x+b.vx*dt,20,worldW-20)}
+for(let i=bullets.length-1;i>=0;i--){let q=bullets[i];q.x+=q.vx*dt;q.y+=q.vy*dt;q.life-=dt;if(q.life<=0||q.x<0||q.x>worldW||q.y>H+20){bullets.splice(i,1);continue}
+if(q.owner===player){let hit=bots.find(b=>Math.abs(q.x-b.x)<23&&Math.abs(q.y-(b.y-27))<27);if(hit){hit.hp-=q.damage;hit.inv=.12;fx(q.x,q.y,'#ffe18b',5);bullets.splice(i,1);if(hit.hp<=0){bots.splice(bots.indexOf(hit),1);roundKOs++;if(Math.random()<.3)pickups.push({x:hit.x,y:hit.y-20,type:'health'});if(gameMode==='survival'&&bots.length===0){wave++;spawnWave();showToast('WAVE '+wave+' INCOMING!')}else if(bots.length===0){finish(true);return}}}}
+else if(Math.abs(q.x-player.x)<22&&Math.abs(q.y-(player.y-28))<29&&player.inv<=0){player.hp-=q.damage;player.inv=.3;fx(q.x,q.y,'#ff6e62',5);bullets.splice(i,1);if(player.hp<=0){finish(false);return}}}
+for(let p of pickups){if(Math.abs(p.x-player.x)<28&&Math.abs(p.y-player.y)<40){player.hp=Math.min(player.max,player.hp+30);p.got=true;showToast('+30 HEALTH')}}
+pickups=pickups.filter(p=>!p.got);
+for(let p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
+cam=clamp(player.x-W*.42,0,worldW-W);
+$('hp').textContent='♥ '+Math.ceil(player.hp)+' / '+player.max;$('wave').textContent=gameMode==='survival'?'WAVE '+wave:gameMode.toUpperCase();$('ko').textContent='KOs '+roundKOs;
+}
+function rounded(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function drawBackdrop(){let pal=colors[map],g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,pal[0]);g.addColorStop(1,pal[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(-cam*.25,0);
+for(let i=0;i<15;i++){let x=i*210;ctx.fillStyle=pal[2];ctx.globalAlpha=.35;ctx.beginPath();ctx.moveTo(x,H-70);ctx.lineTo(x+95,160+(i%4)*25);ctx.lineTo(x+220,H-70);ctx.fill()}ctx.globalAlpha=1;ctx.restore();}
+function drawFighter(o,hero){ctx.save();ctx.translate(o.x,o.y);if(o.face<0)ctx.scale(-1,1);
+if(hero&&character==='tank')rounded(-18,-45,36,42,9,'#738b9b');else rounded(-15,-45,30,42,8,hero?'#e8b34e':['#d85c52','#5f91bf','#8e72b8'][o.kind||0]);
+rounded(-13,-7,11,27,4,'#263747');rounded(3,-7,11,27,4,'#263747');
+ctx.fillStyle='#f0c6a0';ctx.beginPath();ctx.arc(0,-55,15,0,Math.PI*2);ctx.fill();rounded(-14,-62,28,10,5,'#283d4e');rounded(2,-59,11,5,2,'#a8e1ef');
+rounded(9,-38,27,8,3,'#263747');rounded(32,-41,8,14,2,'#c6d5d9');
+rounded(-22,-40,8,25,3,'#344c5b');ctx.fillStyle='#e4f3fa';ctx.fillRect(-23,-18,9,4);
+if(hero){rounded(-25,-35,9,23,4,'#657f8c');ctx.fillStyle='#ffcc67';ctx.fillRect(-24,-31,7,5)}
+ctx.restore();
+let bw=46;rounded(o.x-bw/2,o.y-84,bw,7,4,'#182a39');rounded(o.x-bw/2,o.y-84,bw*clamp(o.hp/o.max,0,1),7,4,hero?'#62e18a':'#ed665d');
+}
+function draw(){drawBackdrop();ctx.save();ctx.translate(-cam,0);
+ctx.fillStyle=map==='canyon'?'#a85f4c':'#536e70';ctx.fillRect(0,ground,worldW,H-ground);ctx.fillStyle='#b4c5a0';ctx.fillRect(0,ground,worldW,7);
+for(let p of platforms){rounded(p.x,p.y,p.w,19,5,'#344e5d');ctx.fillStyle='#b6c7ae';ctx.fillRect(p.x+3,p.y+3,p.w-6,4);ctx.fillStyle='#263b49';ctx.fillRect(p.x+15,p.y+19,12,24);ctx.fillRect(p.x+p.w-27,p.y+19,12,24)}
+for(let p of pickups){ctx.fillStyle='#62e18a';ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(p.x-2,p.y-7,4,14);ctx.fillRect(p.x-7,p.y-2,14,4)}
+for(let b of bots)drawFighter(b,false);if(player)drawFighter(player,true);
+for(let q of bullets){ctx.fillStyle=q.owner===player?'#fff0a3':'#ff8b72';ctx.beginPath();ctx.ellipse(q.x,q.y,7,3,Math.atan2(q.vy,q.vx),0,Math.PI*2);ctx.fill()}
+for(let p of particles){ctx.globalAlpha=clamp(p.life/.5,0,1);ctx.fillStyle=p.col;ctx.fillRect(p.x,p.y,p.size,p.size)}ctx.globalAlpha=1;ctx.restore();
+if(!active){ctx.fillStyle='#172b3a';ctx.font='900 26px system-ui';ctx.fillText('JETPACK WARRIORS',22,40)}}
+function loop(t){if(!active)return;let dt=Math.min(.032,(t-last)/1000);last=t;update(dt);draw();if(active)requestAnimationFrame(loop)}
+function bindHold(id,prop){let el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();joy[prop]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>joy[prop]=false))}
+bindHold('jump','jump');bindHold('jet','jet');bindHold('reload','dash');
+function bindPad(id,kind){let el=$(id),nub=el.querySelector('.nub'),pid=null;function set(e){let r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,len=Math.hypot(dx,dy),max=r.width*.34;if(len>max){dx=dx/len*max;dy=dy/len*max}nub.style.transform=`translate(${dx}px,${dy}px)`;if(kind==='move')joy.move=dx/max;else{let d=Math.hypot(dx,dy)||1;joy.aimX=dx/d;joy.aimY=dy/d;joy.aiming=len>8;player.face=dx>=0?1:-1}}
+function reset(){pid=null;nub.style.transform='';if(kind==='move')joy.move=0;else joy.aiming=false}
+el.addEventListener('pointerdown',e=>{e.preventDefault();pid=e.pointerId;el.setPointerCapture(pid);set(e)});el.addEventListener('pointermove',e=>{if(pid===e.pointerId)set(e)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,reset))}
+bindPad('leftPad','move');bindPad('rightPad','aim');
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='Escape'&&active)pauseMenu()});addEventListener('keyup',e=>keys[e.key]=false);
+canvas.addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){mouse.down=true;mouse.x=e.clientX;mouse.y=e.clientY}});addEventListener('pointerup',()=>mouse.down=false);
+$('start').onclick=startGame;$('pause').onclick=pauseMenu;
+$('quests').onclick=()=>{let d=$('details');d.style.display=d.style.display==='block'?'none':'block';d.innerHTML='<b style="color:#ffdf84">QUEST BOARD</b><br>• Win 2 battles: advance one rank division.<br>• Win 8 battles: unlock Shadow warrior.<br>• Every KO has a chance to drop a health pack.<br><br><b>RANK LADDER</b><br>'+rankNames.map(n=>n+' I · '+n+' II').join(' → ')};
+$('help').onclick=()=>{let d=$('details');d.style.display=d.style.display==='block'?'none':'block';d.innerHTML='<b>PHONE CONTROLS</b><br>Left thumb: move left/right.<br>Right thumb: aim and automatically fire.<br>JUMP: leap onto platforms.<br>JETPACK: hold to fly upward; fuel recharges on ground.<br>DASH: quick burst to dodge attacks.<br><br><b>COMPUTER</b><br>A/D or arrows: move · W/Space: jump · Shift: jetpack · Ctrl: dash · Mouse: aim · Hold click: fire · Esc: return to menu.'};
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+makeMap();draw();
+})();
+</script></body></html>
